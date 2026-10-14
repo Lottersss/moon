@@ -15,6 +15,8 @@ final class NetworkLobby {
         var peer: MCPeerID?
         var isBot: Bool
         var isHost: Bool
+        /// Постоянный id телефона игрока (для переподключения).
+        var device: String? = nil
     }
 
     let role: Role
@@ -38,6 +40,12 @@ final class NetworkLobby {
     private(set) var game: GameViewModel?
     var connectionLost = false
 
+    /// Хост: какое место у какого телефона — чтобы вернуть игрока после потери связи.
+    @ObservationIgnored private var deviceSeats: [String: PlayerID] = [:]
+    /// Клиент: имя хоста, чтобы найти его снова после разрыва.
+    @ObservationIgnored private var hostName: String?
+    @ObservationIgnored private var reconnectTask: Task<Void, Never>?
+
     static let maxSeats = 6
 
     init(role: Role, name: String) {
@@ -60,6 +68,7 @@ final class NetworkLobby {
     }
 
     func leave() {
+        reconnectTask?.cancel()
         service.stop()
     }
 
@@ -97,8 +106,9 @@ final class NetworkLobby {
         var peers: [MCPeerID: PlayerID] = [:]
         for (index, seat) in seats.enumerated() {
             if let peer = seat.peer { peers[peer] = index }
+            if let device = seat.device { deviceSeats[device] = index }
         }
-        service.stopAdvertising()
+        // Комната остаётся видимой: игроки, потерявшие связь, смогут вернуться. Новых не пускаем.
 
         // Сначала каждому телефону — его место и настройки, потом движок пришлёт первый снимок.
         for (peer, id) in peers {
@@ -119,24 +129,67 @@ final class NetworkLobby {
     func join(_ host: MCPeerID) {
         guard role == .client else { return }
         joinedHost = host
+        hostName = host.displayName
         status = "Подключаемся к «\(host.displayName)»…"
         service.join(host)
+    }
+
+    // MARK: - Переподключение (клиент)
+
+    /// Связь с хостом пропала посреди партии: ищем его снова 30 секунд, потом сдаёмся.
+    private func startReconnect() {
+        joinedHost = nil
+        // Уже переподключаемся: неудачная попытка просто освобождает место для следующей.
+        if game?.reconnecting == true { return }
+        game?.reconnecting = true
+        reconnectTask?.cancel()
+        reconnectTask = Task { @MainActor [weak self] in
+            for _ in 0..<60 {
+                guard let self, !Task.isCancelled else { return }
+                if self.isConnectedToHost { return }
+                if self.joinedHost == nil,
+                   let host = self.service.found.first(where: { $0.displayName == self.hostName }) {
+                    self.joinedHost = host
+                    self.service.join(host)
+                }
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+            guard let self, !self.isConnectedToHost else { return }
+            self.game?.reconnecting = false
+            self.connectionLost = true
+            self.game?.connectionLost = true
+        }
+    }
+
+    private func finishReconnect() {
+        reconnectTask?.cancel()
+        game?.reconnecting = false
     }
 
     // MARK: - Сообщения
 
     private func handle(_ message: NetMessage, from peer: MCPeerID) {
         switch (role, message) {
-        case (.host, .hello(let name)):
-            guard game == nil else { return }
+        case (.host, .hello(let name, let device)):
+            if let game {
+                // Партия уже идёт: пускаем только тех, кто в ней был.
+                guard let seat = deviceSeats[device] else {
+                    service.send(.notice("Партия уже идёт"), to: [peer])
+                    return
+                }
+                service.send(.start(you: seat, config: game.config), to: [peer])
+                game.reattach(peer, to: seat)
+                return
+            }
             guard seats.count < Self.maxSeats else {
                 service.send(.notice("Комната заполнена"), to: [peer])
                 return
             }
-            if let index = seats.firstIndex(where: { $0.peer == peer }) {
+            if let index = seats.firstIndex(where: { $0.peer == peer || $0.device == device }) {
                 seats[index].name = name
+                seats[index].peer = peer
             } else {
-                seats.append(Seat(name: name, peer: peer, isBot: false, isHost: false))
+                seats.append(Seat(name: name, peer: peer, isBot: false, isHost: false, device: device))
             }
             broadcastLobby()
 
@@ -148,7 +201,11 @@ final class NetworkLobby {
             status = "Вы в комнате. Ждём, когда хост начнёт игру"
 
         case (.client, .start(let you, let config)):
-            game = GameViewModel(joining: config, me: you, service: service)
+            // После переподключения хост снова присылает start — партия у нас уже есть.
+            if game == nil {
+                game = GameViewModel(joining: config, me: you, service: service)
+            }
+            finishReconnect()
 
         case (.client, .snapshot(let snapshot)):
             game?.apply(snapshot)
@@ -165,18 +222,21 @@ final class NetworkLobby {
         switch (role, state) {
         case (.client, .connected) where peer == joinedHost:
             isConnectedToHost = true
-            status = "Подключено. Ждём, когда хост начнёт игру"
-            service.send(.hello(name: myName), to: [peer])
+            if game == nil { status = "Подключено. Ждём, когда хост начнёт игру" }
+            service.send(.hello(name: myName, device: DeviceIdentity.id), to: [peer])
 
         case (.client, .notConnected) where peer == joinedHost:
             isConnectedToHost = false
             if game != nil {
-                connectionLost = true
-                game?.connectionLost = true
+                startReconnect()
             } else {
                 joinedHost = nil
                 status = "Не удалось подключиться. Выберите комнату ещё раз"
             }
+
+        case (.host, .notConnected) where game != nil && game?.seat(of: peer) == nil:
+            // Телефон, который уже переподключился под новым соединением, — ничего не делаем.
+            break
 
         case (.host, .notConnected):
             if game != nil {

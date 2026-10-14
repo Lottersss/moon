@@ -15,6 +15,7 @@ struct RootView: View {
     @AppStorage("skin") private var skinID = Skin.night.id
     @State private var game: GameViewModel?
     @State private var lobby: NetworkLobby?
+    @State private var saved = SaveStore.load()
     @State private var showSkins = false
 
     var body: some View {
@@ -37,13 +38,24 @@ struct RootView: View {
                 }
             } else if let game {
                 GameView(model: game,
-                         onExit: { self.game = nil },
+                         onExit: {
+                             self.game = nil
+                             saved = SaveStore.load()
+                         },
                          onChangeSkin: { showSkins = true })
             } else {
                 NewGameView(skinID: $skinID,
                             onStart: { config in game = GameViewModel(config: config) },
                             onHost: { name in lobby = NetworkLobby(role: .host, name: name) },
-                            onJoin: { name in lobby = NetworkLobby(role: .client, name: name) })
+                            onJoin: { name in lobby = NetworkLobby(role: .client, name: name) },
+                            saved: saved,
+                            onResume: {
+                                if let saved { game = GameViewModel(restoring: saved) }
+                            },
+                            onDiscard: {
+                                SaveStore.clear()
+                                saved = nil
+                            })
             }
         }
         .environment(\.skin, skin)
@@ -105,6 +117,10 @@ struct RootView: View {
             return args[index + 1]
         }
         if let skin = value(after: "-skin") { skinID = skin }
+        if args.contains("-resume"), game == nil, let saved {
+            game = GameViewModel(restoring: saved)
+            return
+        }
         guard game == nil, let mode = value(after: "-demo") else { return }
         var config = GameConfig()
         config.mode = GameMode(rawValue: mode) ?? .classic

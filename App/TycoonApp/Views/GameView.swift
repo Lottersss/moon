@@ -47,6 +47,22 @@ struct GameView: View {
         }
         .background(skin.background.ignoresSafeArea())
         .overlay { handoffOverlay }
+        .overlay(alignment: .top) {
+            if model.reconnecting {
+                HStack(spacing: 8) {
+                    ProgressView().tint(.white)
+                    Text("Связь с хостом потеряна. Переподключаемся…")
+                        .font(skin.font(13, .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(skin.danger, in: Capsule())
+                .padding(.top, 4)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut, value: model.reconnecting)
         .sheet(item: Binding(get: { selectedCell.map(SelectedCell.init) },
                              set: { selectedCell = $0?.id })) { selected in
             CellDetailSheet(model: model, cell: selected.id)

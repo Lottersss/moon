@@ -13,8 +13,8 @@ struct LogEntry: Identifiable, Codable {
 enum NetworkRole {
     /// Один телефон на всех (hot-seat) или игра против ботов.
     case local
-    /// Этот телефон — хост: держит движок и рассылает состояние. Ключ — телефон игрока, значение — его место.
-    case host(PeerService, peers: [MCPeerID: PlayerID])
+    /// Этот телефон — хост: держит движок и рассылает состояние.
+    case host(PeerService)
     /// Этот телефон — клиент: отправляет действия хосту и показывает присланное состояние.
     case client(PeerService)
 }
@@ -48,6 +48,10 @@ final class GameViewModel {
     @ObservationIgnored private var autoplayTask: Task<Void, Never>?
 
     @ObservationIgnored let role: NetworkRole
+    /// Хост: какой телефон за какое место играет. Меняется, когда игрок переподключается.
+    @ObservationIgnored private var peerSeats: [MCPeerID: PlayerID] = [:]
+    /// Клиент: связь с хостом пропала, идёт переподключение.
+    var reconnecting = false
     /// Игроки, за которых нажимают на этом телефоне.
     let localPlayers: Set<PlayerID>
     /// Клиент потерял связь с хостом.
@@ -66,10 +70,23 @@ final class GameViewModel {
         afterChange()
     }
 
+    /// Продолжение сохранённой партии на этом телефоне.
+    init(restoring saved: SavedGame) {
+        self.config = saved.config
+        self.role = .local
+        self.state = saved.state
+        self.localPlayers = Set(saved.state.players.filter { !$0.isBot }.map(\.id))
+        self.log = saved.log
+        self.nextLogID = (saved.log.map(\.id).max() ?? 0) + 1
+        appendLog("Партия продолжена", player: nil, separator: true)
+        afterChange()
+    }
+
     /// Хост сетевой партии: сам играет за `me`, остальные живые игроки — на других телефонах.
     init(hosting config: GameConfig, me: PlayerID, service: PeerService, peers: [MCPeerID: PlayerID]) {
         self.config = config
-        self.role = .host(service, peers: peers)
+        self.role = .host(service)
+        self.peerSeats = peers
         self.state = GameState(players: config.makePlayers(),
                                settings: config.makeSettings(),
                                seed: UInt64.random(in: 1...UInt64.max))
@@ -190,7 +207,7 @@ final class GameViewModel {
 
     /// Хост: действие пришло с телефона другого игрока.
     func receive(_ action: Action, from peer: MCPeerID) {
-        guard case .host(let service, let peers) = role, let actor = peers[peer] else { return }
+        guard case .host(let service) = role, let actor = peerSeats[peer] else { return }
         guard state.activePlayer == actor else {
             service.send(.notice("Сейчас не ваш ход"), to: [peer])
             return
@@ -205,11 +222,26 @@ final class GameViewModel {
 
     /// Хост: телефон игрока отключился — дальше за него играет бот.
     func peerDisconnected(_ peer: MCPeerID) {
-        guard case .host(_, let peers) = role, let id = peers[peer], !state.players[id].isBot else { return }
+        guard case .host = role, let id = peerSeats.removeValue(forKey: peer), !state.players[id].isBot else { return }
         state.setBot(id, true)
-        appendLog("\(state.players[id].name) отключился — дальше за него играет бот", player: id, separator: false)
+        appendLog("\(state.players[id].name) отключился — пока за него играет бот", player: id, separator: false)
         afterChange()
     }
+
+    /// Хост: игрок вернулся после потери связи — снова садится на своё место.
+    func reattach(_ peer: MCPeerID, to seat: PlayerID) {
+        guard case .host = role, state.players.indices.contains(seat) else { return }
+        peerSeats = peerSeats.filter { $0.value != seat }
+        peerSeats[peer] = seat
+        if state.players[seat].isBot && !config.players[seat].isBot {
+            state.setBot(seat, false)
+            appendLog("\(state.players[seat].name) вернулся в игру", player: seat, separator: false)
+        }
+        afterChange()
+    }
+
+    /// Хост: место, за которое играет этот телефон.
+    func seat(of peer: MCPeerID) -> PlayerID? { peerSeats[peer] }
 
     /// Клиент: пришло новое состояние от хоста.
     func apply(_ snapshot: Snapshot) {
@@ -237,8 +269,18 @@ final class GameViewModel {
         errorMessage = text
     }
 
+    /// Локальная партия сохраняется после каждого изменения; законченная — удаляется.
+    private func autosave() {
+        guard case .local = role else { return }
+        if state.isOver {
+            SaveStore.clear()
+        } else {
+            SaveStore.save(SavedGame(config: config, state: state, log: Array(log.prefix(150)), savedAt: Date()))
+        }
+    }
+
     private func broadcast() {
-        guard case .host(let service, _) = role else { return }
+        guard case .host(let service) = role else { return }
         let snapshot = Snapshot(state: state.redactedForClients(),
                                 log: Array(log.prefix(120)),
                                 secondsLeft: deadline.map { max(0, $0.timeIntervalSinceNow) })
@@ -252,7 +294,10 @@ final class GameViewModel {
         botTask?.cancel()
         timerTask?.cancel()
         deadline = nil
-        defer { broadcast() }
+        defer {
+            broadcast()
+            autosave()
+        }
 
         guard !state.isOver, let active = state.activePlayer else { return }
 

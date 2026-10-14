@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		238D8D887C7CFD48AC97F3CA /* EventText.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB63E2AF7F6F57AEA274729A /* EventText.swift */; };
 		2C318B06AB16FB59758C487F /* TradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C780388D8BCAC42DA82BFC /* TradeSheet.swift */; };
+		2DAC6AE33F41EFABF4C5630A /* SaveStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C132DA13A0578AA84EC128BA /* SaveStore.swift */; };
 		3710A6870B956ADF1ED9A606 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A69ADE2DEE95239747FCAC /* Components.swift */; };
 		432C19B9E670FC045619AC80 /* TycoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C61542B73774319FD6CA60B /* TycoonApp.swift */; };
 		460C5B6A620F3A0D224DBC0E /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B79E2A638B1D09DFB9E6EA /* Skin.swift */; };
@@ -42,6 +43,7 @@
 		AA803D77B7573949949235C6 /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
 		AEA88AB1296BA67D5A1547CC /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		BDB3A6FA8822C894BBB86823 /* PlayersPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersPanel.swift; sourceTree = "<group>"; };
+		C132DA13A0578AA84EC128BA /* SaveStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveStore.swift; sourceTree = "<group>"; };
 		C5C780388D8BCAC42DA82BFC /* TradeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeSheet.swift; sourceTree = "<group>"; };
 		C866B2E10D71525092890C4B /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
 		DB63E2AF7F6F57AEA274729A /* EventText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventText.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				DB63E2AF7F6F57AEA274729A /* EventText.swift */,
 				C866B2E10D71525092890C4B /* GameConfig.swift */,
 				AA803D77B7573949949235C6 /* GameViewModel.swift */,
+				C132DA13A0578AA84EC128BA /* SaveStore.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -218,6 +221,7 @@
 				B716EFA5A55A3A48A3CE80E8 /* PeerService.swift in Sources */,
 				545DC5321DF3BC1F61B9EF02 /* PlayersPanel.swift in Sources */,
 				BC1AD0929E0957061DA1F060 /* PropertySheets.swift in Sources */,
+				2DAC6AE33F41EFABF4C5630A /* SaveStore.swift in Sources */,
 				460C5B6A620F3A0D224DBC0E /* Skin.swift in Sources */,
 				2C318B06AB16FB59758C487F /* TradeSheet.swift in Sources */,
 				432C19B9E670FC045619AC80 /* TycoonApp.swift in Sources */,

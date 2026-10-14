@@ -9,6 +9,10 @@ struct NewGameView: View {
     /// Игра по Bluetooth: создать комнату или найти комнату рядом.
     var onHost: (String) -> Void = { _ in }
     var onJoin: (String) -> Void = { _ in }
+    /// Незаконченная партия на этом телефоне.
+    var saved: SavedGame? = nil
+    var onResume: () -> Void = {}
+    var onDiscard: () -> Void = {}
 
     @State private var config = GameConfig()
     @AppStorage("playerName") private var playerName = "Игрок"
@@ -16,6 +20,24 @@ struct NewGameView: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let saved {
+                    Section {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(saved.summary).font(.subheadline)
+                            Text(saved.savedAt.formatted(date: .abbreviated, time: .shortened))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Button(action: onResume) {
+                            Label("Продолжить партию", systemImage: "play.circle.fill")
+                                .font(.headline)
+                        }
+                        Button("Удалить сохранение", role: .destructive, action: onDiscard)
+                    } header: {
+                        Text("Незаконченная партия")
+                    }
+                }
+
                 Section("Режим") {
                     Picker("Режим", selection: $config.mode) {
                         ForEach(GameMode.allCases) { Text($0.title).tag($0) }

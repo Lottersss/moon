@@ -38,8 +38,7 @@ struct BoardCenterView: View {
                         logLine(entry)
                     }
                 }
-                // На клиенте журнал приходит пачкой от хоста — без анимации, чтобы строки не наезжали.
-                .animation(model.isClient ? nil : .default, value: model.log.first?.id)
+                // Без анимации вставки: новые строки приходят пачками и при анимации наезжают друг на друга.
             }
             .scrollIndicators(.hidden)
         }
