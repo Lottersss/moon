@@ -1,0 +1,41 @@
+name: Tycoon
+options:
+  bundleIdPrefix: com.lotters
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  TycoonCore:
+    path: ..
+
+targets:
+  Tycoon:
+    type: application
+    platform: iOS
+    sources:
+      - path: TycoonApp
+    info:
+      path: TycoonApp/Info.plist
+      properties:
+        NSLocalNetworkUsageDescription: "Нужно, чтобы играть с друзьями рядом по Bluetooth и Wi-Fi."
+        NSBonjourServices:
+          - _tycoon-m1._tcp
+          - _tycoon-m1._udp
+    dependencies:
+      - package: TycoonCore
+        product: TycoonCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lotters.tycoon
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Tycoon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        ENABLE_PREVIEWS: YES

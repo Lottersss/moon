@@ -1,0 +1,439 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		238D8D887C7CFD48AC97F3CA /* EventText.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB63E2AF7F6F57AEA274729A /* EventText.swift */; };
+		2C318B06AB16FB59758C487F /* TradeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C780388D8BCAC42DA82BFC /* TradeSheet.swift */; };
+		3710A6870B956ADF1ED9A606 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A69ADE2DEE95239747FCAC /* Components.swift */; };
+		432C19B9E670FC045619AC80 /* TycoonApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C61542B73774319FD6CA60B /* TycoonApp.swift */; };
+		460C5B6A620F3A0D224DBC0E /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B79E2A638B1D09DFB9E6EA /* Skin.swift */; };
+		53381A538D9254E0C2E87EF4 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEA88AB1296BA67D5A1547CC /* BoardView.swift */; };
+		545DC5321DF3BC1F61B9EF02 /* PlayersPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB3A6FA8822C894BBB86823 /* PlayersPanel.swift */; };
+		7A2D0BFD08B62FB738DF80EE /* ActionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8D4A4AA4D9F6B6F0EBE4CE6 /* ActionPanel.swift */; };
+		81BED3EBE1865A7420D2A043 /* NetworkLobby.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70747124FEC6612F6DFB66CF /* NetworkLobby.swift */; };
+		83005B12C13D1C9E7C6E94B6 /* GameConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866B2E10D71525092890C4B /* GameConfig.swift */; };
+		963EAABF02DAFDC79093DE0C /* GameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA803D77B7573949949235C6 /* GameViewModel.swift */; };
+		A194AE249BE8C369FC24AC33 /* TycoonCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6E3EDF7E7F0A85F4DC46C1C6 /* TycoonCore */; };
+		AE952D56E3586613EC80DB51 /* BoardCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74767EF474EDD90383B6D9D5 /* BoardCenterView.swift */; };
+		B716EFA5A55A3A48A3CE80E8 /* PeerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA330C8DC7FBBA724156295 /* PeerService.swift */; };
+		BC1AD0929E0957061DA1F060 /* PropertySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275B6E831F132A20B7562367 /* PropertySheets.swift */; };
+		E056CAEF7312D5F7C32F08F9 /* LobbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE80D8DD8FBB74F36E28776 /* LobbyView.swift */; };
+		F8EB82FF47E171EB2F00E288 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33422967060193C2596B583 /* GameView.swift */; };
+		FB381AD2801487E9017F3D9F /* NewGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6ED3D8833BE53456C4D00DC /* NewGameView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		275B6E831F132A20B7562367 /* PropertySheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertySheets.swift; sourceTree = "<group>"; };
+		38B79E2A638B1D09DFB9E6EA /* Skin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skin.swift; sourceTree = "<group>"; };
+		3CD3B31661B27ED6146449D2 /* moon */ = {isa = PBXFileReference; lastKnownFileType = folder; name = moon; path = ..; sourceTree = SOURCE_ROOT; };
+		44A69ADE2DEE95239747FCAC /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		6DA330C8DC7FBBA724156295 /* PeerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerService.swift; sourceTree = "<group>"; };
+		70747124FEC6612F6DFB66CF /* NetworkLobby.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLobby.swift; sourceTree = "<group>"; };
+		74767EF474EDD90383B6D9D5 /* BoardCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardCenterView.swift; sourceTree = "<group>"; };
+		7C61542B73774319FD6CA60B /* TycoonApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TycoonApp.swift; sourceTree = "<group>"; };
+		A33422967060193C2596B583 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		A6ED3D8833BE53456C4D00DC /* NewGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewGameView.swift; sourceTree = "<group>"; };
+		A8D4A4AA4D9F6B6F0EBE4CE6 /* ActionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionPanel.swift; sourceTree = "<group>"; };
+		AA803D77B7573949949235C6 /* GameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewModel.swift; sourceTree = "<group>"; };
+		AEA88AB1296BA67D5A1547CC /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
+		BDB3A6FA8822C894BBB86823 /* PlayersPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersPanel.swift; sourceTree = "<group>"; };
+		C5C780388D8BCAC42DA82BFC /* TradeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeSheet.swift; sourceTree = "<group>"; };
+		C866B2E10D71525092890C4B /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
+		DB63E2AF7F6F57AEA274729A /* EventText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventText.swift; sourceTree = "<group>"; };
+		DCA247EDBF5238669A0F759D /* Tycoon.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tycoon.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DFE89188D1E7947F5B085474 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FAE80D8DD8FBB74F36E28776 /* LobbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LobbyView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3E581696865F6AB3275ECC6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A194AE249BE8C369FC24AC33 /* TycoonCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0381E257F75E6FA6B2071C42 = {
+			isa = PBXGroup;
+			children = (
+				CF9BE3E6815535E8F2ACA422 /* Packages */,
+				9E82818781F32AFE04C7D5EC /* TycoonApp */,
+				87BC2DD9BB24A979346DC4D0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		47D51F8C1C11803C828CA5CC /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				38B79E2A638B1D09DFB9E6EA /* Skin.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		54614655B9891B7BCDA78F6E /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				70747124FEC6612F6DFB66CF /* NetworkLobby.swift */,
+				6DA330C8DC7FBBA724156295 /* PeerService.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		87BC2DD9BB24A979346DC4D0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DCA247EDBF5238669A0F759D /* Tycoon.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9E82818781F32AFE04C7D5EC /* TycoonApp */ = {
+			isa = PBXGroup;
+			children = (
+				DFE89188D1E7947F5B085474 /* Info.plist */,
+				7C61542B73774319FD6CA60B /* TycoonApp.swift */,
+				C7D934A74FF34E54E4A3EBA1 /* Model */,
+				54614655B9891B7BCDA78F6E /* Network */,
+				47D51F8C1C11803C828CA5CC /* Theme */,
+				E37F43BDD040313AF5927A58 /* Views */,
+			);
+			path = TycoonApp;
+			sourceTree = "<group>";
+		};
+		C7D934A74FF34E54E4A3EBA1 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				DB63E2AF7F6F57AEA274729A /* EventText.swift */,
+				C866B2E10D71525092890C4B /* GameConfig.swift */,
+				AA803D77B7573949949235C6 /* GameViewModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		CF9BE3E6815535E8F2ACA422 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				3CD3B31661B27ED6146449D2 /* moon */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		E37F43BDD040313AF5927A58 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A8D4A4AA4D9F6B6F0EBE4CE6 /* ActionPanel.swift */,
+				74767EF474EDD90383B6D9D5 /* BoardCenterView.swift */,
+				AEA88AB1296BA67D5A1547CC /* BoardView.swift */,
+				44A69ADE2DEE95239747FCAC /* Components.swift */,
+				A33422967060193C2596B583 /* GameView.swift */,
+				FAE80D8DD8FBB74F36E28776 /* LobbyView.swift */,
+				A6ED3D8833BE53456C4D00DC /* NewGameView.swift */,
+				BDB3A6FA8822C894BBB86823 /* PlayersPanel.swift */,
+				275B6E831F132A20B7562367 /* PropertySheets.swift */,
+				C5C780388D8BCAC42DA82BFC /* TradeSheet.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		692AF5EC842A367E5A883F8D /* Tycoon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 397F9F81D3FCBF35205D2D9E /* Build configuration list for PBXNativeTarget "Tycoon" */;
+			buildPhases = (
+				4DFEA787596D77364AE4CD49 /* Sources */,
+				3E581696865F6AB3275ECC6C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Tycoon;
+			packageProductDependencies = (
+				6E3EDF7E7F0A85F4DC46C1C6 /* TycoonCore */,
+			);
+			productName = Tycoon;
+			productReference = DCA247EDBF5238669A0F759D /* Tycoon.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D7E046A1990AF258600482FA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = FAC3516EEF6A69FAC07D9C67 /* Build configuration list for PBXProject "Tycoon" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 0381E257F75E6FA6B2071C42;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BAD554E9F8EE35D48E3B6457 /* XCLocalSwiftPackageReference ".." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 87BC2DD9BB24A979346DC4D0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				692AF5EC842A367E5A883F8D /* Tycoon */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4DFEA787596D77364AE4CD49 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7A2D0BFD08B62FB738DF80EE /* ActionPanel.swift in Sources */,
+				AE952D56E3586613EC80DB51 /* BoardCenterView.swift in Sources */,
+				53381A538D9254E0C2E87EF4 /* BoardView.swift in Sources */,
+				3710A6870B956ADF1ED9A606 /* Components.swift in Sources */,
+				238D8D887C7CFD48AC97F3CA /* EventText.swift in Sources */,
+				83005B12C13D1C9E7C6E94B6 /* GameConfig.swift in Sources */,
+				F8EB82FF47E171EB2F00E288 /* GameView.swift in Sources */,
+				963EAABF02DAFDC79093DE0C /* GameViewModel.swift in Sources */,
+				E056CAEF7312D5F7C32F08F9 /* LobbyView.swift in Sources */,
+				81BED3EBE1865A7420D2A043 /* NetworkLobby.swift in Sources */,
+				FB381AD2801487E9017F3D9F /* NewGameView.swift in Sources */,
+				B716EFA5A55A3A48A3CE80E8 /* PeerService.swift in Sources */,
+				545DC5321DF3BC1F61B9EF02 /* PlayersPanel.swift in Sources */,
+				BC1AD0929E0957061DA1F060 /* PropertySheets.swift in Sources */,
+				460C5B6A620F3A0D224DBC0E /* Skin.swift in Sources */,
+				2C318B06AB16FB59758C487F /* TradeSheet.swift in Sources */,
+				432C19B9E670FC045619AC80 /* TycoonApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A05C5F21699B7B411618839C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C0DABE9B179FB4C08654C471 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TycoonApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Tycoon;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotters.tycoon;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		DDD2C2A7AE1C36639EE4E2CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F532CDFC901C6FAE92ABD22B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TycoonApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Tycoon;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lotters.tycoon;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		397F9F81D3FCBF35205D2D9E /* Build configuration list for PBXNativeTarget "Tycoon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F532CDFC901C6FAE92ABD22B /* Debug */,
+				C0DABE9B179FB4C08654C471 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FAC3516EEF6A69FAC07D9C67 /* Build configuration list for PBXProject "Tycoon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DDD2C2A7AE1C36639EE4E2CB /* Debug */,
+				A05C5F21699B7B411618839C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BAD554E9F8EE35D48E3B6457 /* XCLocalSwiftPackageReference ".." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6E3EDF7E7F0A85F4DC46C1C6 /* TycoonCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TycoonCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D7E046A1990AF258600482FA /* Project object */;
+}
