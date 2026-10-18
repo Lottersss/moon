@@ -17,10 +17,13 @@ final class NetworkLobby {
         var isHost: Bool
         /// Постоянный id телефона игрока (для переподключения).
         var device: String? = nil
+        /// Аватар аккаунта игрока.
+        var avatar: String? = nil
     }
 
     let role: Role
     let myName: String
+    let myAvatar: String
     @ObservationIgnored let service: PeerService
 
     /// Хост: места в комнате (хост всегда первый). Клиент: имена, присланные хостом.
@@ -48,9 +51,10 @@ final class NetworkLobby {
 
     static let maxSeats = 6
 
-    init(role: Role, name: String) {
+    init(role: Role, name: String, avatar: String) {
         self.role = role
         self.myName = name
+        self.myAvatar = avatar
         self.service = PeerService(displayName: name)
         service.onMessage = { [weak self] message, peer in self?.handle(message, from: peer) }
         service.onPeerState = { [weak self] peer, state in self?.peerChanged(peer, state) }
@@ -58,7 +62,7 @@ final class NetworkLobby {
 
         switch role {
         case .host:
-            seats = [Seat(name: name, peer: nil, isBot: false, isHost: true)]
+            seats = [Seat(name: name, peer: nil, isBot: false, isHost: true, avatar: avatar)]
             service.startHosting()
             status = "Комната открыта. Ждём игроков рядом…"
         case .client:
@@ -76,7 +80,7 @@ final class NetworkLobby {
 
     var canStart: Bool {
         guard role == .host else { return false }
-        if mode == .teams { return seats.count == 4 }
+        if mode.isTeams { return seats.count == 4 }
         return (2...Self.maxSeats).contains(seats.count)
     }
 
@@ -102,6 +106,13 @@ final class NetworkLobby {
         config.maxRounds = maxRounds
         config.passDevicePrompt = false
         config.players = seats.map { PlayerSetup(name: $0.name, isBot: $0.isBot) }
+        var avatars: [Int: String] = [:]
+        for (index, seat) in seats.enumerated() {
+            if let avatar = seat.avatar { avatars[index] = avatar }
+        }
+        config.avatars = avatars
+        config.accounts = [0: AccountStore.shared.main.id]
+        config.cellNames = CellNameStore.shared.names
 
         var peers: [MCPeerID: PlayerID] = [:]
         for (index, seat) in seats.enumerated() {
@@ -170,7 +181,7 @@ final class NetworkLobby {
 
     private func handle(_ message: NetMessage, from peer: MCPeerID) {
         switch (role, message) {
-        case (.host, .hello(let name, let device)):
+        case (.host, .hello(let name, let device, let avatar)):
             if let game {
                 // Партия уже идёт: пускаем только тех, кто в ней был.
                 guard let seat = deviceSeats[device] else {
@@ -188,13 +199,17 @@ final class NetworkLobby {
             if let index = seats.firstIndex(where: { $0.peer == peer || $0.device == device }) {
                 seats[index].name = name
                 seats[index].peer = peer
+                seats[index].avatar = avatar
             } else {
-                seats.append(Seat(name: name, peer: peer, isBot: false, isHost: false, device: device))
+                seats.append(Seat(name: name, peer: peer, isBot: false, isHost: false, device: device, avatar: avatar))
             }
             broadcastLobby()
 
         case (.host, .action(let action)):
             game?.receive(action, from: peer)
+
+        case (.host, .chat(let text)):
+            game?.receiveChat(text, from: peer)
 
         case (.client, .lobby(let names)):
             seats = names.map { Seat(name: $0, peer: nil, isBot: false, isHost: false) }
@@ -223,7 +238,7 @@ final class NetworkLobby {
         case (.client, .connected) where peer == joinedHost:
             isConnectedToHost = true
             if game == nil { status = "Подключено. Ждём, когда хост начнёт игру" }
-            service.send(.hello(name: myName, device: DeviceIdentity.id), to: [peer])
+            service.send(.hello(name: myName, device: DeviceIdentity.id, avatar: myAvatar), to: [peer])
 
         case (.client, .notConnected) where peer == joinedHost:
             isConnectedToHost = false

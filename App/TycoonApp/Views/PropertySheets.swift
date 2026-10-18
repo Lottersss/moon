@@ -75,14 +75,14 @@ struct CellDetailSheet: View {
         case .transport:
             VStack(spacing: 4) {
                 ForEach(Board.transportRents.indices, id: \.self) { i in
-                    row("Вокзалов у владельца: \(i + 1)", Format.money(Board.transportRents[i]), current: false)
+                    row("Автоконцернов у владельца: \(i + 1)", Format.money(Board.transportRents[i]), current: false)
                 }
             }
             .panel()
         case .utility:
             VStack(spacing: 4) {
-                row("Одно предприятие", "кубики × \(Board.utilityMultipliers[0])", current: false)
-                row("Оба предприятия", "кубики × \(Board.utilityMultipliers[1])", current: false)
+                row("Одна студия", "кубики × \(Board.utilityMultipliers[0])", current: false)
+                row("Обе студии", "кубики × \(Board.utilityMultipliers[1])", current: false)
             }
             .panel()
         case .tax(let amount):
@@ -161,7 +161,7 @@ struct ManageSheet: View {
                             .foregroundStyle(skin.danger)
                     }
                     if owned.isEmpty {
-                        Text("У вас пока нет улиц").foregroundStyle(skin.uiSecondaryText)
+                        Text("У вас пока нет фирм").foregroundStyle(skin.uiSecondaryText)
                     }
                     ForEach(owned, id: \.self) { cell in
                         let info = state.board.cells[cell]

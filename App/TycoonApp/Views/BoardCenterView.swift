@@ -6,6 +6,12 @@ struct BoardCenterView: View {
     @Environment(\.skin) private var skin
     let model: GameViewModel
 
+    @State private var draft = ""
+    @FocusState private var chatFocused: Bool
+
+    /// Быстрые фразы — не печатать на маленькой клавиатуре посреди хода.
+    private static let quickPhrases = ["Привет! 👋", "Удачи!", "Договоримся? 🤝", "Везунчик 🍀", "Ха-ха 😂", "Хорошая игра!"]
+
     var body: some View {
         let state = model.state
         let current = state.currentPlayerID
@@ -41,8 +47,46 @@ struct BoardCenterView: View {
                 // Без анимации вставки: новые строки приходят пачками и при анимации наезжают друг на друга.
             }
             .scrollIndicators(.hidden)
+
+            if model.canChat {
+                chatBar
+            }
         }
         .padding(8)
+    }
+
+    /// Чат как в Monopoly One — строка ввода под журналом. Сообщения идут в тот же журнал.
+    private var chatBar: some View {
+        HStack(spacing: 6) {
+            Menu {
+                ForEach(Self.quickPhrases, id: \.self) { phrase in
+                    Button(phrase) { model.sendChat(phrase) }
+                }
+            } label: {
+                Image(systemName: "face.smiling")
+                    .font(.system(size: 15))
+            }
+            TextField("Сообщение", text: $draft)
+                .font(skin.font(11))
+                .submitLabel(.send)
+                .focused($chatFocused)
+                .onSubmit(sendDraft)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(skin.boardSecondaryText.opacity(0.18)))
+            Button(action: sendDraft) {
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 14))
+            }
+            .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+        }
+        .foregroundStyle(skin.boardText)
+        .tint(skin.accent)
+    }
+
+    private func sendDraft() {
+        model.sendChat(draft)
+        draft = ""
     }
 
     private func logLine(_ entry: LogEntry) -> some View {
@@ -52,6 +96,20 @@ struct BoardCenterView: View {
                     .font(skin.font(9, .semibold))
                     .foregroundStyle(skin.boardSecondaryText)
                     .frame(maxWidth: .infinity, alignment: .center)
+            } else if entry.isChat == true {
+                // Сообщение чата: значок и подложка, чтобы не путать с ходами.
+                HStack(alignment: .top, spacing: 4) {
+                    Image(systemName: "bubble.left.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(entry.player.map { skin.playerColor($0) } ?? skin.boardSecondaryText)
+                        .padding(.top, 2)
+                    coloredText(entry)
+                        .font(skin.font(11, .medium))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: 6).fill(skin.boardSecondaryText.opacity(0.12)))
             } else {
                 // Имя игрока в начале строки окрашивается в его цвет — как в журнале Monopoly One.
                 coloredText(entry)
@@ -87,6 +145,24 @@ struct BoardCenterView: View {
             .id(model.rollCounter)
             .transition(.scale(scale: 0.4).combined(with: .opacity))
             .animation(.spring(response: 0.35, dampingFraction: 0.55), value: model.rollCounter)
+        }
+    }
+}
+
+/// Время партии и налоги: «⏱ 52:10 · «Старт» не платит · налог на аренду 50%».
+struct GameClockLabel: View {
+    @Environment(\.skin) private var skin
+    let model: GameViewModel
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let info = model.clockInfo(at: context.date)
+            Text((["⏱ " + info.time] + info.notes).joined(separator: " · "))
+                .font(skin.font(10, .medium))
+                .monospacedDigit()
+                .foregroundStyle(info.notes.isEmpty ? skin.uiSecondaryText : skin.danger)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
     }
 }

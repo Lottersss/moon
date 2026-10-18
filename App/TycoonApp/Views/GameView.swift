@@ -79,6 +79,8 @@ struct GameView: View {
         .confirmationDialog("Выйти из партии?", isPresented: $confirmExit, titleVisibility: .visible) {
             Button("Выйти", role: .destructive, action: onExit)
         }
+        // Аватары аккаунтов вместо фишек скина — на доске, в карточках и окнах.
+        .environment(\.avatars, model.config.avatars ?? [:])
     }
 
     private var board: some View {
@@ -103,6 +105,7 @@ struct GameView: View {
             VStack(spacing: 0) {
                 Text(model.config.mode.title).font(skin.font(15, .bold))
                 Text(model.config.mode.subtitle).font(skin.font(10)).foregroundStyle(skin.uiSecondaryText)
+                GameClockLabel(model: model)
             }
             Spacer()
             Button(action: onChangeSkin) {

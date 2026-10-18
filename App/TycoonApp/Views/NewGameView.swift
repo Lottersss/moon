@@ -7,19 +7,41 @@ struct NewGameView: View {
     @Binding var skinID: String
     var onStart: (GameConfig) -> Void
     /// Игра по Bluetooth: создать комнату или найти комнату рядом.
-    var onHost: (String) -> Void = { _ in }
-    var onJoin: (String) -> Void = { _ in }
+    var onHost: () -> Void = {}
+    var onJoin: () -> Void = {}
     /// Незаконченная партия на этом телефоне.
     var saved: SavedGame? = nil
     var onResume: () -> Void = {}
     var onDiscard: () -> Void = {}
 
     @State private var config = GameConfig()
-    @AppStorage("playerName") private var playerName = "Игрок"
+    /// Какой аккаунт сидит на каком месте (только живые игроки).
+    @State private var seatAccounts: [Int: UUID] = [:]
+
+    private var accounts: AccountStore { .shared }
+    private var cellNames: CellNameStore { .shared }
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    NavigationLink {
+                        AccountsView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            AvatarCircle(symbol: accounts.main.avatar, size: 44, imageURL: accounts.main.avatarURL)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(accounts.main.name).font(.headline)
+                                Text(AccountsView.stats(accounts.main))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Аккаунт")
+                }
+
                 if let saved {
                     Section {
                         VStack(alignment: .leading, spacing: 4) {
@@ -39,10 +61,12 @@ struct NewGameView: View {
                 }
 
                 Section("Режим") {
-                    Picker("Режим", selection: $config.mode) {
-                        ForEach(GameMode.allCases) { Text($0.title).tag($0) }
+                    Picker("Режим", selection: teams) {
+                        Text("Каждый сам за себя").tag(false)
+                        Text("2×2").tag(true)
                     }
                     .pickerStyle(.segmented)
+                    Toggle("Перестановка (быстрая игра)", isOn: reshuffle)
                     Text(config.mode.subtitle).font(.footnote).foregroundStyle(.secondary)
                 }
 
@@ -50,15 +74,17 @@ struct NewGameView: View {
                     ForEach(config.players.indices, id: \.self) { index in
                         playerRow(index)
                     }
-                    if config.mode != .teams {
+                    if !config.mode.isTeams {
                         Stepper("Игроков: \(config.players.count)",
                                 onIncrement: addPlayer, onDecrement: removePlayer)
                     }
                 } header: {
                     Text("Игроки")
                 } footer: {
-                    if config.mode == .teams {
-                        Text("Первые двое — команда A, следующие двое — команда B. Команды ходят по очереди.")
+                    if config.mode.isTeams {
+                        Text("Первые двое — команда A, следующие двое — команда B. Команды ходят по очереди. Нажмите на значок игрока, чтобы выбрать аккаунт.")
+                    } else {
+                        Text("Нажмите на значок живого игрока, чтобы выбрать его аккаунт — победы попадут в его статистику.")
                     }
                 }
 
@@ -69,28 +95,38 @@ struct NewGameView: View {
                     }
                     Picker("Время на ход", selection: $config.turnSeconds) {
                         Text("Без таймера").tag(Int?.none)
-                        ForEach([30, 60, 90, 120], id: \.self) { Text("\($0) с").tag(Int?.some($0)) }
+                        ForEach([30, 45, 60, 90, 120], id: \.self) { Text("\($0) с").tag(Int?.some($0)) }
                     }
                     Toggle("Ровные кубики", isOn: $config.balancedDice)
                     Toggle("«Передайте телефон» между игроками", isOn: $config.passDevicePrompt)
                 }
 
                 Section {
-                    TextField("Ваше имя", text: $playerName)
+                    NavigationLink {
+                        CellNamesView()
+                    } label: {
+                        LabeledContent("Названия полей",
+                                       value: cellNames.names.isEmpty ? "Стандартные" : "Своих: \(cellNames.names.count)")
+                    }
+                } header: {
+                    Text("Поля")
+                }
+
+                Section {
                     Button {
-                        onHost(playerName)
+                        onHost()
                     } label: {
                         Label("Создать комнату", systemImage: "antenna.radiowaves.left.and.right")
                     }
                     Button {
-                        onJoin(playerName)
+                        onJoin()
                     } label: {
                         Label("Найти комнату рядом", systemImage: "magnifyingglass")
                     }
                 } header: {
                     Text("По Bluetooth")
                 } footer: {
-                    Text("Каждый играет на своём iPhone. Телефоны должны быть рядом, интернет не нужен.")
+                    Text("Вы играете как «\(accounts.main.name)». Каждый играет на своём iPhone, телефоны должны быть рядом, интернет не нужен. В партии есть чат.")
                 }
 
                 Section("Скин") {
@@ -99,7 +135,7 @@ struct NewGameView: View {
 
                 Section {
                     Button {
-                        onStart(config)
+                        onStart(finalConfig)
                     } label: {
                         Label("Начать игру", systemImage: "play.fill")
                             .font(.headline)
@@ -110,10 +146,61 @@ struct NewGameView: View {
             }
             .navigationTitle("Новая игра")
             .onChange(of: config.mode) { _, mode in
-                if mode == .teams { fitPlayers(to: 4) }
+                if mode.isTeams { fitPlayers(to: 4) }
             }
+            .onAppear(perform: seatMainAccount)
         }
         .tint(skin.accent)
+    }
+
+    /// Режим собирается из двух независимых переключателей: команды и «Перестановка».
+    private var teams: Binding<Bool> {
+        Binding(get: { config.mode.isTeams },
+                set: { config.mode = GameMode(teams: $0, reshuffle: config.mode.isReshuffle) })
+    }
+
+    private var reshuffle: Binding<Bool> {
+        Binding(get: { config.mode.isReshuffle },
+                set: { on in
+                    config.mode = GameMode(teams: config.mode.isTeams, reshuffle: on)
+                    // Быстрая игра Monopoly One: 45 секунд на ход вместо обычных.
+                    if config.turnSeconds != nil { config.turnSeconds = on ? 45 : 60 }
+                })
+    }
+
+    /// Первое место по умолчанию занимает основной аккаунт.
+    private func seatMainAccount() {
+        guard seatAccounts.isEmpty, !config.players.isEmpty, !config.players[0].isBot else { return }
+        let main = accounts.main
+        seatAccounts[0] = main.id
+        config.players[0].name = main.name
+    }
+
+    /// Аватары мест, у которых выбран аккаунт.
+    private var avatarMap: [Int: String] {
+        seatAccounts.compactMapValues { accounts.account($0)?.avatar }
+    }
+
+    /// Настройки партии вместе с аккаунтами, аватарами и своими названиями полей.
+    private var finalConfig: GameConfig {
+        var result = config
+        let seats = seatAccounts.filter { config.players.indices.contains($0.key) && !config.players[$0.key].isBot }
+        result.accounts = seats
+        result.avatars = seats.compactMapValues { accounts.account($0)?.avatar }
+        result.cellNames = cellNames.names
+        return result
+    }
+
+    private func pick(_ account: Account?, for index: Int) {
+        if let account {
+            seatAccounts = seatAccounts.filter { $0.value != account.id }
+            seatAccounts[index] = account.id
+            config.players[index].name = account.name
+            config.players[index].isBot = false
+        } else {
+            seatAccounts[index] = nil
+            config.players[index].name = "Игрок \(index + 1)"
+        }
     }
 
     private var isValid: Bool {
@@ -123,15 +210,33 @@ struct NewGameView: View {
 
     private func playerRow(_ index: Int) -> some View {
         HStack(spacing: 10) {
-            TokenView(player: index, size: 26)
+            Menu {
+                ForEach(accounts.accounts) { account in
+                    Button {
+                        pick(account, for: index)
+                    } label: {
+                        Label(account.name, systemImage: account.avatar)
+                    }
+                }
+                Divider()
+                Button("Гость (без аккаунта)") { pick(nil, for: index) }
+            } label: {
+                TokenView(player: index, size: 26)
+                    .environment(\.avatars, avatarMap)
+            }
+            .disabled(config.players[index].isBot)
             TextField("Имя", text: $config.players[index].name)
-            if config.mode == .teams {
+            if config.mode.isTeams {
                 Text(index < 2 ? "A" : "B")
                     .font(.caption.bold())
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Color.secondary.opacity(0.15), in: Capsule())
             }
-            Toggle(isOn: $config.players[index].isBot) {
+            Toggle(isOn: Binding(get: { config.players[index].isBot },
+                                 set: { isBot in
+                                     config.players[index].isBot = isBot
+                                     if isBot { seatAccounts[index] = nil }
+                                 })) {
                 Image(systemName: "cpu")
             }
             .toggleStyle(.button)

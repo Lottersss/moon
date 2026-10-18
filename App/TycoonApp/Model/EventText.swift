@@ -20,9 +20,9 @@ enum EventText {
             return "\(name(player)) бросает \(roll.d1) и \(roll.d2)" + (roll.isDouble ? " — дубль!" : "")
         case .speedDieRolled(let player, let face):
             switch face {
-            case .number(let n): return "\(name(player)): третий кубик +\(n)"
-            case .bus: return "\(name(player)): третий кубик — автобус"
-            case .bonus: return "\(name(player)): третий кубик — бонус-ход"
+            case .number(let n): return "\(name(player)): быстрый кубик +\(n)"
+            case .bus: return "\(name(player)): быстрый кубик — автобус"
+            case .bonus: return "\(name(player)): быстрый кубик — бонус, в конце хода переход к свободному полю"
             }
         case .moved:
             return nil
@@ -38,6 +38,8 @@ enum EventText {
             case .card: return "\(name(from)) платит \(creditor(to)) \(money(amount))"
             case .jackpotBet: return "\(name(from)) ставит \(money(amount)) в джекпот"
             }
+        case .rentTax(let owner, let withheld, let percent):
+            return "Налог на аренду \(percent)%: \(name(owner)) недополучает \(money(withheld))"
         case .received(let player, let amount):
             return "\(name(player)) получает \(money(amount))"
         case .cardDrawn(let player, let deck, let card):
@@ -100,8 +102,8 @@ enum EventText {
         case .awaitingRoll:
             return state.players[state.currentPlayerID].inJail ? "В тюрьме: дубль, штраф или карточка" : "Бросьте кубики"
         case .awaitingMoveChoice: return "Автобус: выберите ход"
-        case .awaitingTeleport: return "Тройка! Нажмите на любую клетку"
-        case .awaitingBonusMove: return "Бонус-ход к свободной улице"
+        case .awaitingTeleport: return "Трипл! Нажмите на любую клетку"
+        case .awaitingBonusMove: return "Бонус: к ближайшему свободному полю"
         case .awaitingBuyDecision(let cell): return "Купить «\(state.board.cells[cell].name)»?"
         case .auction(let auction):
             if let leader = auction.highestBidder {

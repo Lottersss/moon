@@ -28,6 +28,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lotters.tycoon
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: XS888DUC7Z
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "6.0"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Tycoon

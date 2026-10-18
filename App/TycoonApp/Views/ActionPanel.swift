@@ -66,7 +66,7 @@ struct ActionPanel: View {
             manageRow
 
         case .awaitingMoveChoice(let options):
-            Text("Автобус: на сколько клеток идти?")
+            Text("Автобус: на сколько клеток идти? Можно нажать на подсвеченное поле")
                 .font(skin.font(13)).foregroundStyle(skin.uiSecondaryText)
             HStack(spacing: 8) {
                 ForEach(options, id: \.self) { steps in
@@ -75,13 +75,17 @@ struct ActionPanel: View {
             }
 
         case .awaitingTeleport:
-            Label("Тройка! Нажмите на любую клетку доски", systemImage: "sparkles")
+            Label("Трипл! Нажмите на любую клетку доски", systemImage: "sparkles")
                 .font(skin.font(14, .semibold))
                 .foregroundStyle(skin.highlight)
                 .frame(minHeight: 44)
 
         case .awaitingBonusMove:
-            action("Бонус-ход", "star.fill", .takeBonusMove, style: .primary)
+            // Бонус срабатывает сам — как в Monopoly One.
+            Label("Бонус: переход к ближайшему свободному полю…", systemImage: "star.fill")
+                .font(skin.font(14, .semibold))
+                .foregroundStyle(skin.highlight)
+                .frame(minHeight: 44)
 
         case .awaitingBuyDecision(let cell):
             let price = state.board.cells[cell].price ?? 0
@@ -107,7 +111,7 @@ struct ActionPanel: View {
 
         case .debt(let debt):
             let cash = state.players[debt.debtor].cash
-            Text("Долг \(Format.money(debt.total)), у вас \(Format.money(cash)). Продайте дома или заложите улицы.")
+            Text("Долг \(Format.money(debt.total)), у вас \(Format.money(cash)). Продайте филиалы или заложите фирмы.")
                 .font(skin.font(13))
                 .foregroundStyle(skin.uiText)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -12,11 +12,13 @@ struct TycoonApp: App {
 
 /// Корневой экран: настройка партии или сама партия.
 struct RootView: View {
-    @AppStorage("skin") private var skinID = Skin.night.id
+    @AppStorage("skin") private var skinID = Skin.arena.id
     @State private var game: GameViewModel?
     @State private var lobby: NetworkLobby?
     @State private var saved = SaveStore.load()
     @State private var showSkins = false
+    /// Для отладки: `-signin` сразу открывает вход через Monopoly One.
+    @State private var showSignIn = false
 
     var body: some View {
         let skin = Skin.named(skinID)
@@ -46,8 +48,8 @@ struct RootView: View {
             } else {
                 NewGameView(skinID: $skinID,
                             onStart: { config in game = GameViewModel(config: config) },
-                            onHost: { name in lobby = NetworkLobby(role: .host, name: name) },
-                            onJoin: { name in lobby = NetworkLobby(role: .client, name: name) },
+                            onHost: { lobby = NetworkLobby(role: .host, name: me.name, avatar: me.avatar) },
+                            onJoin: { lobby = NetworkLobby(role: .client, name: me.name, avatar: me.avatar) },
                             saved: saved,
                             onResume: {
                                 if let saved { game = GameViewModel(restoring: saved) }
@@ -61,10 +63,15 @@ struct RootView: View {
         .environment(\.skin, skin)
         .preferredColorScheme(skin.isDark ? .dark : .light)
         .task {
+            if ProcessInfo.processInfo.arguments.contains("-signin") { showSignIn = true }
             startDemoIfRequested()
             await startNetworkDemoIfRequested()
         }
         .animation(.easeInOut, value: skinID)
+        .sheet(isPresented: $showSignIn) {
+            MonopolyOneSignInView()
+                .environment(\.skin, skin)
+        }
         .sheet(isPresented: $showSkins) {
             NavigationStack {
                 SkinPicker(skinID: $skinID)
@@ -75,6 +82,9 @@ struct RootView: View {
             .presentationDetents([.height(220)])
         }
     }
+
+    /// Основной аккаунт этого телефона — им играем по Bluetooth.
+    private var me: Account { AccountStore.shared.main }
 
     private func closeLobby() {
         lobby?.leave()
@@ -90,7 +100,7 @@ struct RootView: View {
             return args[index + 1]
         }
         if let name = value(after: "-host") {
-            let room = NetworkLobby(role: .host, name: name)
+            let room = NetworkLobby(role: .host, name: name, avatar: Account.avatars[0])
             lobby = room
             for _ in 0..<120 where room.seats.count < 2 {
                 try? await Task.sleep(for: .milliseconds(500))
@@ -99,12 +109,20 @@ struct RootView: View {
             room.addBot()
             room.start()
         } else if let name = value(after: "-join") {
-            let room = NetworkLobby(role: .client, name: name)
+            let room = NetworkLobby(role: .client, name: name, avatar: Account.avatars[1])
             lobby = room
             for _ in 0..<120 where room.hosts.isEmpty {
                 try? await Task.sleep(for: .milliseconds(500))
             }
             if let host = room.hosts.first { room.join(host) }
+        }
+        // `-say Текст` — через пару секунд после начала партии написать в чат (проверка чата).
+        if let text = value(after: "-say"), let room = lobby {
+            for _ in 0..<120 where room.game == nil {
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+            try? await Task.sleep(for: .seconds(2))
+            room.game?.sendChat(text)
         }
     }
 

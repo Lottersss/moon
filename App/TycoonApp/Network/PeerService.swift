@@ -7,7 +7,7 @@ import TycoonCore
 enum NetMessage: Codable {
     /// Клиент → хост: «я подключился, меня зовут так». `device` — постоянный id телефона,
     /// по нему хост узнаёт игрока, вернувшегося после потери связи.
-    case hello(name: String, device: String)
+    case hello(name: String, device: String, avatar: String?)
     /// Хост → всем: кто сейчас в комнате.
     case lobby(seats: [String])
     /// Хост → клиенту: партия началась, ты — игрок `you`.
@@ -18,6 +18,8 @@ enum NetMessage: Codable {
     case action(Action)
     /// Хост → клиенту: короткое сообщение (например, «действие отклонено»).
     case notice(String)
+    /// Клиент → хост: сообщение в чат. Хост добавляет его в журнал, и все видят его в снимке.
+    case chat(String)
 }
 
 struct Snapshot: Codable {

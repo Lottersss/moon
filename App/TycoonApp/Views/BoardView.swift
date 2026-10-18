@@ -2,7 +2,8 @@ import SwiftUI
 import TycoonCore
 
 /// Геометрия квадратной доски: углы и по `side - 1` клеток на каждой стороне.
-/// Старт — правый нижний угол, движение против часовой стрелки, как на настоящей доске.
+/// Старт — левый верхний угол, движение по часовой стрелке, как в Monopoly One:
+/// верхняя сторона, правая, нижняя, левая.
 struct BoardLayout {
     let size: CGFloat
     let count: Int
@@ -16,14 +17,21 @@ struct BoardLayout {
     func edge(of index: Int) -> Edge {
         if index % side == 0 { return .corner }
         switch index / side {
-        case 0: return .bottom
-        case 1: return .left
-        case 2: return .top
-        default: return .right
+        case 0: return .top
+        case 1: return .right
+        case 2: return .bottom
+        default: return .left
         }
     }
 
+    /// Клетка на доске. Считаем как на настоящей доске (старт справа внизу)
+    /// и поворачиваем на 180°: старт оказывается слева вверху.
     func rect(for index: Int) -> CGRect {
+        let r = classicRect(for: index)
+        return CGRect(x: size - r.maxX, y: size - r.maxY, width: r.width, height: r.height)
+    }
+
+    private func classicRect(for index: Int) -> CGRect {
         let k = CGFloat(index % side)
         switch index / side {
         case 0:
@@ -91,6 +99,11 @@ struct BoardView: View {
                     .position(x: size / 2, y: size / 2)
 
                 tokens(layout: layout, state: state)
+
+                // Бросок — крупные кубики посреди доски.
+                DiceRollOverlay(model: model, size: layout.short * 1.5)
+                    .position(x: size / 2, y: size / 2)
+                    .allowsHitTesting(false)
             }
             .frame(width: size, height: size)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -112,16 +125,20 @@ struct BoardView: View {
         return Format.money(state.rentAmount(for: info.id))
     }
 
+    /// Фишки рисуются там, где они сейчас на экране (`shownPositions`), а не где уже стоят по правилам:
+    /// так они идут по клеткам шаг за шагом.
     private func tokens(layout: BoardLayout, state: GameState) -> some View {
         let alive = state.players.filter { !$0.isBankrupt }
-        let byCell = Dictionary(grouping: alive, by: \.position)
+        let shown = model.shownPositions
+        func cell(_ id: PlayerID) -> CellID { shown.indices.contains(id) ? shown[id] : state.players[id].position }
+        let byCell = Dictionary(grouping: alive, by: { cell($0.id) })
         let size = max(12, layout.short * 0.55)
         return ForEach(alive) { player in
-            let group = byCell[player.position] ?? [player]
+            let here = cell(player.id)
+            let group = byCell[here] ?? [player]
             let slot = group.firstIndex { $0.id == player.id } ?? 0
             TokenView(player: player.id, size: size)
-                .position(layout.tokenCenter(cell: player.position, slot: slot, of: group.count))
-                .animation(.spring(response: 0.45, dampingFraction: 0.75), value: player.position)
+                .position(layout.tokenCenter(cell: here, slot: slot, of: group.count))
                 .allowsHitTesting(false)
         }
     }
@@ -146,8 +163,11 @@ struct CellView: View {
     var body: some View {
         ZStack {
             Rectangle().fill(edge == .corner ? skin.cornerFill : skin.cellFill)
-            if let group = info.group {
-                Rectangle().fill(skin.groupColor(group).opacity(skin.isDark && skin.id == "neon" ? 0.22 : 0.3))
+            if let group = info.group, skin.groupTint > 0 {
+                Rectangle().fill(skin.groupColor(group).opacity(skin.groupTint))
+            }
+            if skin.ownerTint > 0, let owner = ownership.owner {
+                Rectangle().fill(skin.playerColor(owner).opacity(skin.ownerTint))
             }
             oriented
                 .opacity(ownership.isMortgaged ? 0.45 : 1)
@@ -221,10 +241,10 @@ struct CellView: View {
         if let tag {
             let width = length * 0.24
             ZStack {
-                Rectangle().fill(ownership.owner.map { skin.playerColor($0) } ?? skin.cellStroke.opacity(0.18))
+                Rectangle().fill(tagFill)
                 Text(tag)
                     .font(skin.font(max(5, width * 0.62), .bold))
-                    .foregroundStyle(ownership.owner == nil ? skin.text : .white)
+                    .foregroundStyle(ownership.owner == nil && !skin.groupTags ? skin.text : .white)
                     .lineLimit(1)
                     .minimumScaleFactor(0.4)
                     .frame(width: thickness * 0.94)
@@ -235,13 +255,28 @@ struct CellView: View {
         }
     }
 
+    /// Цвет ценника. В скинах как в Monopoly One — всегда цвет группы (заложенная — тёмно-красный),
+    /// в остальных — цвет владельца, у свободной клетки серый.
+    private var tagFill: Color {
+        if skin.groupTags {
+            if ownership.isMortgaged { return Color(hex: 0x8E2A2A) }
+            if let group = info.group { return skin.groupColor(group) }
+            return skin.secondaryText
+        }
+        if let owner = ownership.owner { return skin.playerColor(owner) }
+        return skin.cellStroke.opacity(0.18)
+    }
+
+    /// Звёзды-филиалы: в скинах как в Monopoly One — белые.
+    private var starColor: Color { skin.groupTags ? .white : skin.highlight }
+
     /// Филиалы — маленькие звёзды, отель — одна большая.
     @ViewBuilder private func stars(length: CGFloat, thickness: CGFloat) -> some View {
         let width = length * 0.14
         if ownership.branches == Board.maxBranches {
             Image(systemName: "star.fill")
                 .font(.system(size: width * 0.95))
-                .foregroundStyle(skin.highlight)
+                .foregroundStyle(starColor)
                 .shadow(color: .black.opacity(0.4), radius: 1)
                 .frame(width: width)
         } else if ownership.branches > 0 {
@@ -249,7 +284,7 @@ struct CellView: View {
                 ForEach(0..<ownership.branches, id: \.self) { _ in
                     Image(systemName: "star.fill")
                         .font(.system(size: min(width * 0.8, thickness / 5)))
-                        .foregroundStyle(skin.highlight)
+                        .foregroundStyle(starColor)
                         .shadow(color: .black.opacity(0.4), radius: 0.5)
                 }
             }
@@ -317,12 +352,26 @@ struct CornerContent: View {
 }
 
 enum CellSymbol {
+    static func industrySymbol(_ group: ColorGroup) -> String {
+        switch group {
+        case .brown: "sparkles"
+        case .lightBlue: "tshirt.fill"
+        case .pink: "bubble.left.and.bubble.right.fill"
+        case .orange: "mug.fill"
+        case .red: "airplane"
+        case .yellow: "fork.knife"
+        case .green: "bed.double.fill"
+        case .darkBlue: "iphone"
+        }
+    }
+
     static func name(for info: CellInfo) -> String? {
         switch info.kind {
-        case .start: "arrow.left.circle.fill"
-        case .company: nil
-        case .transport: "tram.fill"
-        case .utility: info.name.contains("Вод") ? "drop.fill" : "bolt.fill"
+        case .start: "arrow.right.circle.fill"
+        // Вместо логотипов — значок отрасли.
+        case .company(let group, _, _, _): industrySymbol(group)
+        case .transport: "car.fill"
+        case .utility: "gamecontroller.fill"
         case .chance: "questionmark.circle.fill"
         case .communityChest: "shippingbox.fill"
         case .tax: "banknote.fill"

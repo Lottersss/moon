@@ -44,12 +44,13 @@ struct LobbyView: View {
             ForEach(Array(lobby.seats.enumerated()), id: \.element.id) { index, seat in
                 HStack(spacing: 10) {
                     TokenView(player: index, size: 26)
+                        .environment(\.avatars, seat.avatar.map { [index: $0] } ?? [:])
                     Text(seat.name)
                     Spacer()
                     Text(seat.isHost ? "Вы" : seat.isBot ? "Бот" : "Телефон")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    if lobby.mode == .teams {
+                    if lobby.mode.isTeams {
                         Text(index < 2 ? "A" : "B").font(.caption.bold())
                     }
                 }
@@ -77,13 +78,13 @@ struct LobbyView: View {
             }
             Picker("Время на ход", selection: Binding(get: { lobby.turnSeconds }, set: { lobby.turnSeconds = $0 })) {
                 Text("Без таймера").tag(Int?.none)
-                ForEach([30, 60, 90, 120], id: \.self) { Text("\($0) с").tag(Int?.some($0)) }
+                ForEach([30, 45, 60, 90, 120], id: \.self) { Text("\($0) с").tag(Int?.some($0)) }
             }
             Picker("Лимит кругов", selection: Binding(get: { lobby.maxRounds }, set: { lobby.maxRounds = $0 })) {
                 Text("Без лимита").tag(Int?.none)
                 ForEach([20, 30, 50, 100], id: \.self) { Text("\($0)").tag(Int?.some($0)) }
             }
-            if lobby.mode == .teams && lobby.seats.count != 4 {
+            if lobby.mode.isTeams && lobby.seats.count != 4 {
                 Text("Для 2×2 нужно ровно 4 игрока (можно с ботами)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)

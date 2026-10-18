@@ -32,6 +32,12 @@ struct Skin: Identifiable, Sendable {
     let dicePip: Color
     let fontDesign: Font.Design
     let cornerRadius: CGFloat
+    /// Насколько клетка улицы закрашена цветом группы (0 — белая клетка).
+    var groupTint: Double = 0.3
+    /// Ценник свободной улицы в цвете группы (как в Monopoly One), иначе серый.
+    var groupTags: Bool = false
+    /// Купленная клетка закрашивается цветом владельца (0 — нет).
+    var ownerTint: Double = 0
 
     func groupColor(_ group: ColorGroup) -> Color { groupColors[group] ?? accent }
 
@@ -39,7 +45,7 @@ struct Skin: Identifiable, Sendable {
     var boardText: Color { darkBoard ? uiText : text }
     var boardSecondaryText: Color { darkBoard ? uiSecondaryText : secondaryText }
     /// Тёмный стол при светлых клетках: текст в центре доски должен быть светлым.
-    private var darkBoard: Bool { id == "kazan" || id == "night" }
+    private var darkBoard: Bool { ["kazan", "night", "arena"].contains(id) }
 
     func playerColor(_ id: PlayerID) -> Color { playerColors[id % playerColors.count] }
 
@@ -51,9 +57,38 @@ struct Skin: Identifiable, Sendable {
 }
 
 extension Skin {
-    static let all: [Skin] = [.night, .paper, .neon, .minimal, .kazan]
+    static let all: [Skin] = [.arena, .night, .paper, .neon, .minimal, .kazan]
 
-    static func named(_ id: String) -> Skin { all.first { $0.id == id } ?? .night }
+    static func named(_ id: String) -> Skin { all.first { $0.id == id } ?? .arena }
+
+    /// «Арена» — в духе Monopoly One: тёмный стол, белые клетки с зазорами,
+    /// купленная клетка в цвете владельца, ценник всегда в цвете группы, белые звёзды-филиалы.
+    static let arena = Skin(
+        id: "arena", name: "Арена", isDark: true,
+        background: Color(hex: 0x222428),
+        boardFill: Color(hex: 0x222428),
+        cellFill: .white,
+        cornerFill: .white,
+        cellStroke: Color(hex: 0x222428),
+        text: Color(hex: 0x23262D),
+        secondaryText: Color(hex: 0x8A8F99),
+        uiText: .white,
+        uiSecondaryText: Color(hex: 0xA9AEB8),
+        accent: Color(hex: 0x8CCB5E),
+        highlight: Color(hex: 0xFFD43B),
+        danger: Color(hex: 0xE35D5D),
+        groupColors: [
+            .brown: Color(hex: 0xC98B5E), .lightBlue: Color(hex: 0x74C6EE),
+            .pink: Color(hex: 0xB48AE8), .orange: Color(hex: 0xF2A94E),
+            .red: Color(hex: 0xE46D6D), .yellow: Color(hex: 0xE9C14E),
+            .green: Color(hex: 0x93CF6E), .darkBlue: Color(hex: 0x5B8DEF),
+        ],
+        playerColors: [0xE35D5D, 0x4FB3EA, 0x8CCB5E, 0xA07BE0, 0xF0A04B, 0x2EC4B6].map { Color(hex: $0) },
+        tokenSymbols: ["crown.fill", "star.fill", "heart.fill", "bolt.fill", "flame.fill", "leaf.fill"],
+        diceFill: .white, dicePip: Color(hex: 0x23262D),
+        fontDesign: .default, cornerRadius: 6,
+        groupTint: 0, groupTags: true, ownerTint: 0.6
+    )
 
     /// «Ночь»: тёмный стол, белые клетки с цветом групп, светлый журнал в центре.
     static let night = Skin(
@@ -133,7 +168,8 @@ extension Skin {
         playerColors: [0x00E5FF, 0xFF2BD6, 0xFFE14D, 0x39FF88, 0xFF9F1C, 0xB28DFF].map { Color(hex: $0) },
         tokenSymbols: ["bolt.fill", "flame.fill", "sparkles", "moon.stars.fill", "atom", "gamecontroller.fill"],
         diceFill: Color(hex: 0x22223A), dicePip: Color(hex: 0x00E5FF),
-        fontDesign: .rounded, cornerRadius: 10
+        fontDesign: .rounded, cornerRadius: 10,
+        groupTint: 0.22
     )
 
     /// «Минимал»: чистый белый, тонкие линии.
@@ -184,7 +220,7 @@ extension Skin {
             .red: Color(hex: 0xC62828), .yellow: Color(hex: 0xF9A825),
             .green: Color(hex: 0x2E7D32), .darkBlue: Color(hex: 0x1A237E),
         ],
-        playerColors: [0xC62828, 0x1565C0, 0xF9A825, 0x6A1B9A, 0x00838F, 0x4E342E].map { Color(hex: $0) },
+        playerColors: [0xE53935, 0x42A5F5, 0xF9A825, 0xBA68C8, 0x26C6DA, 0xA1887F].map { Color(hex: $0) },
         tokenSymbols: ["leaf.fill", "crown.fill", "building.columns.fill", "tram.fill", "shield.fill", "star.circle.fill"],
         diceFill: Color(hex: 0xF6F1E4), dicePip: Color(hex: 0x0E3B2E),
         fontDesign: .serif, cornerRadius: 8
@@ -204,7 +240,7 @@ extension Color {
 // MARK: - Скин в окружении SwiftUI
 
 private struct SkinKey: EnvironmentKey {
-    static let defaultValue: Skin = .night
+    static let defaultValue: Skin = .arena
 }
 
 extension EnvironmentValues {
