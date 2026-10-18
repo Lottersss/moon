@@ -1,19 +1,19 @@
 public typealias CellID = Int
 
-/// Цветные группы улиц, как в классической Монополии.
+/// Группы фирм по отраслям (как в Monopoly One). Внутренние имена — цвета классической доски.
 public enum ColorGroup: String, Codable, Sendable, CaseIterable {
     case brown, lightBlue, pink, orange, red, yellow, green, darkBlue
 
     public var title: String {
         switch self {
-        case .brown: "Коричневые"
-        case .lightBlue: "Голубые"
-        case .pink: "Розовые"
-        case .orange: "Оранжевые"
-        case .red: "Красные"
-        case .yellow: "Жёлтые"
-        case .green: "Зелёные"
-        case .darkBlue: "Синие"
+        case .brown: "Парфюмерия"
+        case .lightBlue: "Одежда"
+        case .pink: "Соцсети"
+        case .orange: "Напитки"
+        case .red: "Авиалинии"
+        case .yellow: "Рестораны"
+        case .green: "Отели"
+        case .darkBlue: "Электроника"
         }
     }
 }

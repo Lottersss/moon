@@ -453,7 +453,57 @@ func botGame(seed: UInt64, settings base: GameSettings = .monopolyOne, teams: Bo
     try game.apply(.teleport(39), by: 0)
     #expect(game.players[0].position == 39)
     #expect(game.phase == .awaitingBuyDecision(cell: 39))
-    #expect(game.extraRollPending)   // тройка — это ещё и дубль
+    // Трипл не считается дублем: ни дополнительного хода, ни счёта к тюрьме.
+    #expect(!game.extraRollPending)
+    #expect(game.doublesInRow == 0)
+}
+
+@Test func speedDieStartsAfterSeventhRound() throws {
+    var game = makeGame { $0.speedDie = true; $0.speedDieStartRound = 8 }
+    game.riggedRolls = [DiceRoll(1, 2)]
+    game.riggedSpeedDie = [.number(3)]
+    try game.apply(.roll, by: 0)
+    #expect(game.lastSpeedDie == nil)
+    #expect(game.players[0].position == 3)
+    #expect(GameSettings.reshuffle.speedDieActive(round: 7) == false)
+    #expect(GameSettings.reshuffle.speedDieActive(round: 8))
+}
+
+@Test func quickGamePresetMatchesMonopolyOne() {
+    let settings = GameSettings.reshuffle
+    #expect(settings.startingCash == 17_500)
+    #expect(settings.mortgageTurnLimit == 7)
+    #expect(settings.unevenBuilding == true)
+    #expect(settings.speedDieFaces.filter { $0 == .bus }.count == 2)
+    #expect(settings.speedDieFaces.filter { $0 == .bonus }.count == 1)
+}
+
+@Test func bonusSkipsMortgagedAndAllowsTeammateFields() throws {
+    var game = makeTeamGame { $0.speedDie = true }
+    // Все поля куплены: ближайшее (1) заложено у соперника, следующее (3) — у напарника.
+    for cell in game.board.cells.indices where game.board.cells[cell].isPurchasable {
+        game.cells[cell].owner = 2
+    }
+    game.cells[1].isMortgaged = true
+    game.cells[3].owner = 1
+    game.players[0].position = 0
+    game.phase = .awaitingBonusMove
+    try game.apply(.takeBonusMove, by: 0)
+    #expect(game.players[0].position == 3)
+}
+
+@Test func unevenBuildingInQuickGame() throws {
+    var game = makeGame { $0.unevenBuilding = true }
+    game.cells[1].owner = 0
+    game.cells[3].owner = 0
+    game.players[0].cash = 100_000
+    for _ in 0..<4 { try game.apply(.build(1), by: 0) }
+    #expect(game.cells[1].branches == 4 && game.cells[3].branches == 0)
+    // Большая звезда — только когда на соседнем поле тоже 4 филиала.
+    #expect(throws: GameError.unevenBuild) { try game.apply(.build(1), by: 0) }
+    for _ in 0..<4 { try game.apply(.build(3), by: 0) }
+    try game.apply(.build(1), by: 0)
+    #expect(game.cells[1].branches == 5)
 }
 
 @Test func speedDieBonusMovesToNextFreeStreet() throws {

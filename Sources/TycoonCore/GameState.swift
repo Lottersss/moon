@@ -138,6 +138,9 @@ public struct GameState: Codable, Sendable, Equatable, GameQueries {
     public internal(set) var tradeOffersThisTurn: Int
     /// Сколько домов построено в каждой группе за текущий ход.
     public internal(set) var buildsThisTurn: [ColorGroup: Int]
+    /// Сколько секунд идёт партия. Часы ведёт приложение хоста через `advanceClock(to:)`.
+    /// Опционально, чтобы читались старые сохранения.
+    public internal(set) var clockSeconds: Int? = nil
 
     // Скрытая часть: генератор, колоды и мешок кубиков не попадают в PublicView.
     var rng: SplitMix64
@@ -362,5 +365,34 @@ extension GameState {
     public mutating func setBot(_ player: PlayerID, _ isBot: Bool) {
         guard players.indices.contains(player) else { return }
         players[player].isBot = isBot
+    }
+}
+
+
+// MARK: - Часы партии
+
+extension GameState {
+    /// Ведёт часы партии: время только растёт. Вызывает хост перед каждым действием.
+    public mutating func advanceClock(to seconds: Int) {
+        clockSeconds = max(clockSeconds ?? 0, seconds)
+    }
+
+    /// Выдают ли сейчас деньги за проход «Старт»: в Monopoly One с 46-й минуты (в быстрой игре — с 31-й) нет.
+    public var startBonusPaid: Bool {
+        guard let limit = settings.noStartBonusAfterMinutes else { return true }
+        return (clockSeconds ?? 0) < limit * 60
+    }
+
+    /// Налог на аренду в процентах: 0 до его начала, затем 50% и +1% в минуту до 99%.
+    public var rentTaxPercent: Int {
+        guard let start = settings.rentTaxAfterMinutes else { return 0 }
+        let seconds = (clockSeconds ?? 0) - start * 60
+        guard seconds >= 0 else { return 0 }
+        return min(99, 50 + seconds / 60)
+    }
+
+    /// Сколько из выплаченной аренды достаётся владельцу.
+    func rentIncome(afterTax amount: Int) -> Int {
+        amount * (100 - rentTaxPercent) / 100
     }
 }

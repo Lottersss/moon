@@ -208,7 +208,8 @@ public struct SimpleBot: Sendable {
                   !view.groupHasBranches(target) else { continue }
 
             // Напарнику платим номинал, сопернику — с наценкой.
-            let factor = view.areTeammates(other, me) ? 1.0 : tradeOfferFactor
+            var factor = view.areTeammates(other, me) ? 1.0 : tradeOfferFactor
+            if case .forbidIfUnfair(let ratio) = view.settings.tradePolicy { factor = min(factor, ratio - 0.05) }
             let offerCash = Int(Double(view.assetValue(target)) * factor)
             guard cash - offerCash >= reserve else { continue }
             let offer = TradeOffer(from: me, to: other, giveCash: offerCash, takeCells: [target])
@@ -253,9 +254,12 @@ public enum BotRunner {
         if let trade = state.pendingTrade { return actor == trade.to ? .rejectTrade : .cancelTrade }
         switch state.phase {
         case .awaitingRoll: return .roll
-        case .awaitingMoveChoice(let options): return .chooseMove(options[0])
+        // Время вышло: автобус — на сумму кубиков, трипл — на «Старт» (как в Monopoly One).
+        case .awaitingMoveChoice(let options): return .chooseMove(options.max() ?? options[0])
         case .awaitingTeleport:
-            return .teleport((state.players[actor].position + 1) % state.board.count)
+            let start = state.board.cells.first { $0.kind == .start }?.id ?? 0
+            return .teleport(state.players[actor].position == start
+                             ? (start + 1) % state.board.count : start)
         case .awaitingBonusMove: return .takeBonusMove
         case .awaitingBuyDecision: return .declineBuy
         case .auction: return .passBid

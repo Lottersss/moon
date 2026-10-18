@@ -151,13 +151,22 @@ extension GameState {
             return
         }
 
-        // Третий кубик бросается вместе с двумя обычными (из тюрьмы — без него).
+        // Третий кубик бросается вместе с двумя обычными (из тюрьмы — без него),
+        // в быстрой игре — только после седьмого раунда.
         var speedFace: SpeedDieFace?
-        if settings.speedDie {
+        if settings.speedDieActive(round: round) {
             let face = rollSpeedDie()
             speedFace = face
             lastSpeedDie = face
             ev.append(.speedDieRolled(player: id, face: face))
+        }
+
+        // Трипл (1:1:1, 2:2:2, 3:3:3) — переход на любое поле. Он не считается дублем:
+        // не даёт дополнительный ход и не ведёт в тюрьму за три дубля подряд.
+        if case .number(let extra)? = speedFace, roll.isDouble, extra == roll.d1 {
+            extraRollPending = false
+            phase = .awaitingTeleport
+            return
         }
 
         if roll.isDouble {
@@ -176,12 +185,7 @@ extension GameState {
         case nil:
             move(id, by: roll.total, &ev)
         case .number(let extra)?:
-            if roll.isDouble && extra == roll.d1 {
-                // Тройка: игрок сам выбирает, куда переместиться.
-                phase = .awaitingTeleport
-            } else {
-                move(id, by: roll.total + extra, &ev)
-            }
+            move(id, by: roll.total + extra, &ev)
         case .bus?:
             let options = Array(Set([roll.d1, roll.d2, roll.total])).sorted()
             phase = .awaitingMoveChoice(options: options)
@@ -200,7 +204,7 @@ extension GameState {
         let passedStart = steps > 0 && raw >= count
         players[id].position = to
         ev.append(.moved(player: id, from: from, to: to, passedStart: passedStart))
-        if passedStart {
+        if passedStart && startBonusPaid {
             players[id].cash += settings.passStartBonus
             ev.append(.startBonus(player: id, amount: settings.passStartBonus))
         }
@@ -258,7 +262,9 @@ extension GameState {
         phase = extraRollPending ? .awaitingRoll : .awaitingEndTurn
     }
 
-    /// Бонус-ход: к ближайшей свободной улице, а если свободных нет — к ближайшей чужой.
+    /// Бонус «М1»: в конце хода — к ближайшему свободному полю; если свободных нет —
+    /// к ближайшему незаложенному полю другого игрока (соперника или напарника в 2×2);
+    /// если нет и таких — ничего не происходит.
     mutating func takeBonusMove(_ ev: inout [GameEvent]) {
         let id = currentPlayerID
         let position = players[id].position
@@ -266,7 +272,7 @@ extension GameState {
             board.cells[cell].isPurchasable && cells[cell].owner == nil
         } ?? nearest(from: position) { cell in
             guard let owner = cells[cell].owner else { return false }
-            return areOpponents(owner, id)
+            return owner != id && !cells[cell].isMortgaged
         }
         guard let target else {
             finishLanding()
@@ -422,8 +428,15 @@ extension GameState {
     mutating func settle(_ id: PlayerID, _ payments: [Payment], reason: PaymentReason, _ ev: inout [GameEvent]) {
         for payment in payments {
             players[id].cash -= payment.amount
-            if case .player(let creditor) = payment.to { players[creditor].cash += payment.amount }
             ev.append(.paid(from: id, to: payment.to, amount: payment.amount, reason: reason))
+            guard case .player(let creditor) = payment.to else { continue }
+            // Налог на аренду: часть выплаты владельцу уходит банку (при банкротстве он не применяется).
+            var income = payment.amount
+            if case .rent = reason { income = rentIncome(afterTax: payment.amount) }
+            players[creditor].cash += income
+            if income < payment.amount {
+                ev.append(.rentTax(owner: creditor, withheld: payment.amount - income, percent: rentTaxPercent))
+            }
         }
     }
 
@@ -596,8 +609,19 @@ extension GameState {
         let groupCells = board.cells(in: group)
         guard !groupCells.contains(where: { cells[$0].isMortgaged }) else { throw GameError.groupHasMortgage }
         guard cells[cell].branches < Board.maxBranches else { throw GameError.maxLevel }
-        let lowest = groupCells.map { cells[$0].branches }.min() ?? 0
-        guard cells[cell].branches == lowest else { throw GameError.unevenBuild }
+        if settings.unevenBuilding == true {
+            // Быстрая игра: филиалы на любом поле, но большая звезда — только когда
+            // на остальных полях группы уже по 4 филиала.
+            if cells[cell].branches == Board.maxBranches - 1 {
+                let others = groupCells.filter { $0 != cell }
+                guard others.allSatisfy({ cells[$0].branches >= Board.maxBranches - 1 }) else {
+                    throw GameError.unevenBuild
+                }
+            }
+        } else {
+            let lowest = groupCells.map { cells[$0].branches }.min() ?? 0
+            guard cells[cell].branches == lowest else { throw GameError.unevenBuild }
+        }
         if let limit = settings.maxBuildsPerGroupPerTurn, buildsThisTurn[group, default: 0] >= limit {
             throw GameError.buildLimitThisTurn
         }
@@ -613,8 +637,15 @@ extension GameState {
         guard board.cells.indices.contains(cell), let group = board.cells[cell].group else { throw GameError.noBranches }
         guard cells[cell].owner == id else { throw GameError.notOwner }
         guard cells[cell].branches > 0 else { throw GameError.noBranches }
-        let highest = board.cells(in: group).map { cells[$0].branches }.max() ?? 0
-        guard cells[cell].branches == highest else { throw GameError.unevenBuild }
+        let groupLevels = board.cells(in: group).map { cells[$0].branches }
+        if settings.unevenBuilding == true {
+            // Пока в группе стоит большая звезда, у остальных полей нельзя опускаться ниже 4 филиалов.
+            let hasHotel = groupLevels.contains(Board.maxBranches)
+            guard !hasHotel || cells[cell].branches == Board.maxBranches else { throw GameError.unevenBuild }
+        } else {
+            let highest = groupLevels.max() ?? 0
+            guard cells[cell].branches == highest else { throw GameError.unevenBuild }
+        }
 
         cells[cell].branches -= 1
         players[id].cash += branchRefund(cell)

@@ -110,26 +110,60 @@ public struct GameSettings: Codable, Sendable, Equatable {
     public var maxTradeOffersPerTurn = 3
     public var randomizeTurnOrder = true
 
-    /// Третий кубик.
+    /// Третий кубик («быстрый»).
     public var speedDie = false
-    public var speedDieFaces: [SpeedDieFace] = [.number(1), .number(2), .number(3), .bus, .bonus, .bonus]
+    /// Грани как в Monopoly One: 1, 2, 3, два «Автобуса» и один бонус «М1».
+    public var speedDieFaces: [SpeedDieFace] = [.number(1), .number(2), .number(3), .bus, .bus, .bonus]
+    /// С какого раунда бросается третий кубик (в Monopoly One — после седьмого раунда, то есть с 8-го).
+    /// `nil` — с первого хода. Опционально, чтобы читались старые сохранения.
+    public var speedDieStartRound: Int? = nil
+    /// Неравномерная постройка: филиалы на любом поле монополии без выравнивания,
+    /// большая звезда — когда на остальных полях группы уже по 4 филиала. `nil` — равномерно.
+    public var unevenBuilding: Bool? = nil
     /// Перемешать клетки доски (углы остаются на месте).
     public var shuffleBoard = false
     /// Платят ли напарники ренту друг другу в режиме 2×2.
     public var teammatesPayRent = false
+    /// Правила по времени партии (минуты считает хост, движок времени не знает).
+    /// Опциональные, чтобы читались старые сохранения; `nil` — правило выключено.
+    /// Через сколько минут игры за проход «Старт» перестают платить (в Monopoly One: с 46-й минуты).
+    public var noStartBonusAfterMinutes: Int? = nil
+    /// Через сколько минут игры начинается налог на аренду (в Monopoly One: с 61-й минуты):
+    /// владелец получает половину, дальше налог растёт на 1% в минуту до 99%.
+    public var rentTaxAfterMinutes: Int? = nil
 
     public init() {}
 
     /// Обычный режим: правила Monopoly One на классической доске.
     /// Сверь значения с игрой и поправь при необходимости.
-    public static var monopolyOne: GameSettings { GameSettings() }
-
-    /// «Перестановка»: перемешанная доска и третий кубик.
-    public static var reshuffle: GameSettings {
+    public static var monopolyOne: GameSettings {
         var settings = GameSettings()
+        // Договор, где одна сторона больше другой более чем на 50%, запрещён.
+        settings.tradePolicy = .forbidIfUnfair(ratio: 1.5)
+        settings.noStartBonusAfterMinutes = 45
+        settings.rentTaxAfterMinutes = 60
+        return settings
+    }
+
+    /// «Перестановка»: перемешанная доска и правила быстрой игры Monopoly One —
+    /// третий кубик после 7-го раунда, 17 500k на старте, неравномерная постройка, залог на 7 раундов.
+    public static var reshuffle: GameSettings {
+        var settings = GameSettings.monopolyOne
         settings.shuffleBoard = true
         settings.speedDie = true
+        settings.speedDieStartRound = 8
+        settings.startingCash = 17_500
+        settings.unevenBuilding = true
+        settings.mortgageTurnLimit = 7
+        // В быстрой игре время налогов короче: «Старт» перестаёт платить с 31-й минуты, налог на аренду — с 41-й.
+        settings.noStartBonusAfterMinutes = 30
+        settings.rentTaxAfterMinutes = 40
         return settings
+    }
+
+    /// Бросается ли третий кубик в этом раунде.
+    public func speedDieActive(round: Int) -> Bool {
+        speedDie && round >= (speedDieStartRound ?? 1)
     }
 }
 
@@ -279,6 +313,8 @@ public enum GameEvent: Codable, Sendable, Equatable {
     case startBonus(player: PlayerID, amount: Int)
     case bought(player: PlayerID, cell: CellID, price: Int)
     case paid(from: PlayerID, to: Creditor, amount: Int, reason: PaymentReason)
+    /// Налог на аренду: владелец получил на `withheld` меньше (она ушла банку).
+    case rentTax(owner: PlayerID, withheld: Int, percent: Int)
     case received(player: PlayerID, amount: Int)
     case cardDrawn(player: PlayerID, deck: DeckKind, card: Card)
     case sentToJail(player: PlayerID)
