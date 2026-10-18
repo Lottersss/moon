@@ -4,24 +4,6 @@
 
 <img src="screenshot-night.png" width="320" alt="Партия в скине «Ночь»">
 
-Улицы, иконки и оформление — свои; к Hasbro и Monopoly One проект отношения не имеет.
-
-## Структура
-
-```
-Sources/TycoonCore/
-  Random.swift         SplitMix64 с seed, бросок двух кубиков
-  Board.swift          типы клеток, цветные группы, «Перестановка» доски
-  StandardBoard.swift  классическая доска из 40 клеток
-  Cards.swift          колоды «Шанс» и «Общественная казна»
-  Models.swift         игроки, настройки, фазы, действия, события, ошибки
-  GameState.swift      состояние партии, рента, порядок ходов, публичный вид для ботов
-  Engine.swift         apply(действие) — все правила
-  Bot.swift            SimpleBot и BotRunner
-Sources/TycoonSim/     консольный симулятор баланса
-Tests/TycoonCoreTests/ тесты правил
-```
-
 Главная идея: состояние меняется только через
 `try state.apply(action, by: playerID)`. Функция возвращает список событий
 для анимаций. Если действие недопустимо, бросается `GameError`, а состояние
@@ -80,16 +62,6 @@ SwiftUI, iOS 17+. Что есть:
 кто-то подключится), `-join Имя` (подключиться к первой найденной комнате), `-autoplay`
 (за живого игрока на этом телефоне нажимает логика бота).
 
-## Запуск ядра
-
-```bash
-cd ~/Tycoon
-swift build
-swift test --scratch-path /tmp/moon-build   # сборка вне Рабочего стола, иначе macOS мешает подписи тестов
-swift run -c release tycoon-sim --games 10000
-swift run -c release tycoon-sim --mode reshuffle --games 10000
-swift run -c release tycoon-sim --mode 2x2 --games 10000
-```
 
 Параметры симулятора: `--mode classic|reshuffle|2x2|2x2-reshuffle`, `--games N`,
 `--players 2..6`, `--seed N`, `--rounds N|none`, `--dice random|balanced`.
@@ -140,11 +112,3 @@ swift run -c release tycoon-sim --mode 2x2 --games 10000
 - Честность: генератор с seed, случайный порядок ходов, режим «ровных кубиков»,
   гандикап через `PlayerSetup.bonusCash`. Боты видят только `PublicView`.
 
-## Что сверить с Monopoly One
-
-Значения лежат в `GameSettings` (файл `Models.swift`):
-
-- `mortgageTurnLimit` — срок выкупа залога (сейчас 15 ходов);
-- `unmortgageFeePercent` — наценка при выкупе (сейчас 10%);
-- `maxBuildsPerGroupPerTurn` — «один дом за ход» (сейчас выключено);
-- `speedDieFaces` — грани третьего кубика.
